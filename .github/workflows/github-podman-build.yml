@@ -1,0 +1,70 @@
+name: Build and deploy
+
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - 'ubuntu-\d\d.\d\d-v\d.\d'
+    paths-ignore:
+      - 'README.md'
+
+env:
+  IS_GIT_TAG: ${{ github.ref_type == 'tag' }}
+  IMAGE_NAME: yoctocontainer-${{ github.ref_name }}
+  IMAGE_TAG: ${{ github.sha }}
+  POKY_BRANCH: kirkstone
+  SELFTESTS: bbtests.BitbakeTests.test_dry_run
+
+jobs:
+  podman:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set env
+        if: ${{ success() && fromJSON(env.IS_GIT_TAG) }}
+        run: |
+          echo "IMAGE_NAME=yoctocontainer-${GITHUB_REF_NAME%-v*}" >> $GITHUB_ENV; \
+          echo "IMAGE_TAG=${GITHUB_REF_NAME#ubuntu-*-v}" >> $GITHUB_ENV
+      - name: Build with buildah
+        if: ${{ success() }}
+        uses: redhat-actions/buildah-build@v2
+        id: build_image
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          oci: true
+          tags: ${{ github.sha }} ${{ env.IMAGE_TAG }}
+          labels: |
+            org.opencontainers.image.ref.name=${{ env.IMAGE_NAME }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ env.IMAGE_TAG }}
+          containerfiles: |
+            ./Containerfile
+      - name: Checkout poky
+        if: ${{ success() }}
+        uses: actions/checkout@v4
+        with:
+          repository: yoctoproject/poky
+          ref: ${{ env.POKY_BRANCH }}
+          path: sources/poky
+      - name: Selftest
+        if: ${{ success() }}
+        run: |
+          podman run \
+            --userns=keep-id \
+            --env TEMPLATECONF=/yocto/selftest \
+            --volume ${GITHUB_WORKSPACE}:/yocto:U \
+            --rm \
+            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
+            oe-selftest --run-tests ${{ env.SELFTESTS }}
+      - name: Push image
+        if: ${{ success() && fromJSON(env.IS_GIT_TAG) }}
+        uses: redhat-actions/push-to-registry@v2
+        id: push
+        with:
+          image: ${{ steps.build_image.outputs.image }}
+          tags: ${{ steps.build_image.outputs.tags }}
+          registry: ghcr.io/${{ github.repository_owner }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
