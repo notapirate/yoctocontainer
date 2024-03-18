@@ -13,7 +13,7 @@ env:
   IS_GIT_TAG: ${{ github.ref_type == 'tag' }}
   IMAGE_NAME: yoctocontainer-${{ github.ref_name }}
   IMAGE_TAG: ${{ github.sha }}
-  POKY_BRANCH: rocko
+  POKY_BRANCH: jethro
   SELFTESTS: bbtests.BitbakeTests.test_dry_run
 
 jobs:
