@@ -13,7 +13,7 @@ env:
   IS_GIT_TAG: ${{ github.ref_type == 'tag' }}
   IMAGE_NAME: yoctocontainer-${{ github.ref_name }}
   IMAGE_TAG: ${{ github.sha }}
-  POKY_BRANCH: jethro
+  POKY_BRANCH: dora
   SELFTESTS: bbtests.BitbakeTests.test_dry_run
 
 jobs:
@@ -57,7 +57,7 @@ jobs:
             --volume ${GITHUB_WORKSPACE}:/yocto:U \
             --rm \
             ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
-            oe-selftest --run-tests ${{ env.SELFTESTS }}
+            bitbake-selftest
       - name: Push image
         if: ${{ success() && fromJSON(env.IS_GIT_TAG) }}
         uses: redhat-actions/push-to-registry@v2
