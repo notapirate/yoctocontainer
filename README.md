@@ -10,7 +10,7 @@ The easiest way is to use the prebuild containers that are in the github contain
 
 ### Build container
 
-If you want to make changes to the container, you can build it yourself. Checkout your preferred ubuntu branch (e.g. `ubuntu-20.04`) and build your own container, preferably with podman.
+If you want to make changes to the container, you can build it yourself. Checkout your preferred ubuntu branch (e.g. `ubuntu-22.04`) and build your own container, preferably with podman.
 
 ## Run on linux host
 
@@ -26,13 +26,13 @@ If your prefer a different folder structure, please set the environment variable
 
 I suggest the following command to run bitbake in a yoctocontainer:
 
-``podman run --userns=keep-id --env-host -v <path/to/yocto/dir>:/yocto:U -v tmpfs:/tmp -it ghcr.io/notapirate/yoctocontainer-ubuntu-20.04:1.0 bitbake <imagerecipe>``
+``podman run --userns=keep-id --env-host -v <path/to/yocto/dir>:/yocto:U -v tmpfs:/tmp -it ghcr.io/notapirate/yoctocontainer-ubuntu-22.04:1.0 bitbake <imagerecipe>``
 
 ### Alias
 
 For convenience you can use the following bitbake alias, just add it to your `~/.bashrc`:
 
-`alias bitbake='podman run --userns=keep-id --env-host -v <path/to/yocto/dir>:/yocto:U -v tmpfs:/tmp -it ghcr.io/notapirate/yoctocontainer-ubuntu-20.04:1.0 bitbake $@'`
+`alias bitbake='podman run --userns=keep-id --env-host -v <path/to/yocto/dir>:/yocto:U -v tmpfs:/tmp -it ghcr.io/notapirate/yoctocontainer-ubuntu-22.04:1.0 bitbake $@'`
 
 ### .gitconfig
 

@@ -13,7 +13,7 @@ env:
   IS_GIT_TAG: ${{ github.ref_type == 'tag' }}
   IMAGE_NAME: yoctocontainer-${{ github.ref_name }}
   IMAGE_TAG: ${{ github.sha }}
-  POKY_BRANCH: dora
+  POKY_BRANCH: scarthgap
   SELFTESTS: bbtests.BitbakeTests.test_dry_run
 
 jobs:
@@ -53,11 +53,13 @@ jobs:
         run: |
           podman run \
             --userns=keep-id \
-            --env TEMPLATECONF=/yocto/selftest \
+            --env TEMPLATECONF=/yocto/sources/poky/meta-poky/conf/templates/default \
             --volume ${GITHUB_WORKSPACE}:/yocto:U \
             --rm \
             ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
-            bitbake-selftest
+            bash -c 'SANITY_TESTED_DISTROS="" \
+            BB_ENV_PASSTHROUGH_ADDITIONS=SANITY_TESTED_DISTROS \
+            oe-selftest --run-tests ${{ env.SELFTESTS }}'
       - name: Push image
         if: ${{ success() && fromJSON(env.IS_GIT_TAG) }}
         uses: redhat-actions/push-to-registry@v2
